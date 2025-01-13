@@ -1,0 +1,188 @@
+====Db first approach ====
+
+1. Add Nuget Packages 
+Microsoft.EntityFrameworkCore
+Microsoft.EntityFrameworkCore.SqlServer
+Microsoft.EntityFrameworkCore.Tools
+
+
+Note - First Create Database and create required Tables with appropriate Column name and give respective keys
+ 
+2. Package Manager Console
+ Scaffold-DbContext "Data Source=(localdb)\MsSqlLocalDb;Initial Catalog=ActsJan25;Integrated Security=true" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
+Note : read more at https://docs.microsoft.com/en-us/ef/core/managing-schemas/scaffolding?tabs=vs
+
+
+3. Add EF service in Program.cs
+
+        public static void Main(string[] args)
+        {
+            builder.Services.AddControllersWithViews();
+            builder.Services.AddDbContext<ActsJan25Context>(options =>
+                        options.UseSqlServer(builder.Configuration.GetConnectionString("ActsJan25Context")));
+
+        }
+
+4. Specify connection string in appsettings.json
+"ConnectionStrings": {
+    "ActsJan25Context": "Data Source=(localdb)\\MsSqlLocalDb;Initial Catalog=ActsJan25;Integrated Security=true;MultipleActiveResultSets=true"
+  }
+
+5. Create Controller and Views of given classes. eg - Employee , Department 
+
+6. Add question mark to Derived Table class's Master class - eg - Employee is derived and Department? is master
+
+===================================================================================================================================================================
+
+====sample table query====
+
+CREATE TABLE [dbo].[Employee] (
+    [EmpNo]  INT             NOT NULL,
+    [Name]   NCHAR (50)      NOT NULL,
+    [Basic]  DECIMAL (18, 2) NOT NULL,
+    [DeptNo] INT             NOT NULL,
+    PRIMARY KEY CLUSTERED ([EmpNo] ASC),
+    CONSTRAINT [FK_Department_ToEmployee] FOREIGN KEY ([DeptNo]) REFERENCES [dbo].[Department] ([DeptNo])
+);
+
+
+
+
+CREATE TABLE [dbo].[Department] (
+    [DeptNo]   INT        NOT NULL,
+    [DeptName] NCHAR (50) NOT NULL,
+    PRIMARY KEY CLUSTERED ([DeptNo] ASC)
+);
+
+
+===================================================================================================================================================================
+
+==== Code first approach ====
+
+1. Add Nuget Packages
+Microsoft.EntityFrameworkCore
+Microsoft.EntityFrameworkCore.SqlServer
+Microsoft.EntityFrameworkCore.Tools
+
+2. Add Model class and DbContext class
+
+3. Add connection string in appsettings.json
+
+  "ConnectionStrings": {
+    "EmpDbContext": "Data Source=(localdb)\\MsSqlLocalDb;Initial Catalog=EmpDb;Integrated Security=true;MultipleActiveResultSets=true"
+  }
+
+4.  Add EF service in Program.cs
+
+       public static void Main(string[] args)
+        {
+            builder.Services.AddControllersWithViews();
+            builder.Services.AddDbContext<EmpDbContext>(options =>
+                        options.UseSqlServer(builder.Configuration.GetConnectionString("EmpDbContext")));
+
+        }
+
+5. Package Manager Console
+
+Add-Migration InitialCreate 
+Update-Database
+
+5. Create Controller and Views of given classes. eg - Employee , Department 
+-----------------------------------------------------------------------
+public partial class FinalDayDbContext : DbContext
+{
+    public FinalDayDbContext()
+    {
+    }
+
+    public FinalDayDbContext(DbContextOptions<FinalDayDbContext> options)
+        : base(options)
+    {
+    }
+
+    public virtual DbSet<Department> Departments { get; set; }
+
+    public virtual DbSet<Employee> Employees { get; set; }
+	}
+
+===================================================================================================================================================================
+
+Note - This class is only for CodeFirst approach -
+============Class Department============
+
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+
+namespace CodeFirst.Models
+{
+    //[Table("Deps")]
+    public partial class Department
+    {
+        [Key]
+        [Column("DeptNo", TypeName = "int")]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        public int DeptNo { get; set; }
+
+
+        [Column("DeptName", TypeName = "varchar(50)")]
+        public string DeptName { get; set; } = null!;
+
+        public virtual ICollection<Employee> Employees { get; set; } = new List<Employee>();
+    }
+
+}
+
+===================================================================================================================================================================
+
+Note - This class is only for CodeFirst approach -
+============Class Employee============
+
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+
+namespace CodeFirst.Models
+{
+    public partial class Employee
+    {
+        [Key] //same as ID 
+        [Column("EmpNo", TypeName = "int")] // column name for primary key
+        [DatabaseGenerated(DatabaseGeneratedOption.None)] //copy as it is
+        public int EmpNo { get; set; }
+        [Column("Name", TypeName = "varchar(50)")]
+        public string Name { get; set; } = null!;
+        [Column("Basic", TypeName = "decimal(18,2)")]
+        public decimal Basic { get; set; }
+        [Column("DeptNo", TypeName = "int")]
+        public int DeptNo { get; set; }
+
+        [ForeignKey("DeptNo")]
+        public virtual Department? DeptNoNavigation { get; set; } = null!;
+
+    }
+
+}
+
+===================================================================================================================================================================
+
+====sample table query====
+
+CREATE TABLE [dbo].[Employee] (
+    [EmpNo]  INT             NOT NULL,
+    [Name]   NCHAR (50)      NOT NULL,
+    [Basic]  DECIMAL (18, 2) NOT NULL,
+    [DeptNo] INT             NOT NULL,
+    PRIMARY KEY CLUSTERED ([EmpNo] ASC),
+    CONSTRAINT [FK_Department_ToEmployee] FOREIGN KEY ([DeptNo]) REFERENCES [dbo].[Department] ([DeptNo])
+);
+
+
+
+
+CREATE TABLE [dbo].[Department] (
+    [DeptNo]   INT        NOT NULL,
+    [DeptName] NCHAR (50) NOT NULL,
+    PRIMARY KEY CLUSTERED ([DeptNo] ASC)
+);
+
+
+===================================================================================================================================================================
