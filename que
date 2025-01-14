@@ -1,0 +1,12 @@
+create a console app that allow
+take input details of students marks from console keep detail in generic list
+save data to file 
+read the content of file and display data on console
+Student fields : Roll no, Subject,amd marks
+
+use same student model and create mvc application that cover following
+1 create view to enter new student data
+2 apply exception handling relevant to model fields
+use EF to save model data to database
+3 view to show list of student
+5 view to edit and delete existing student.
